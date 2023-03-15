@@ -2,36 +2,57 @@ program tictactoe
     implicit none 
 
     character(len=1), dimension(3, 3) :: game_board = " "
-    logical :: turn_player = .TRUE., game_over = .FALSE.
-    integer :: move, x, y
+    logical :: turn_player = .TRUE., game_over = .FALSE., can_move = .FALSE.
+    integer :: move = -1, x, y
+    real :: random_move
 
     call fill_board(game_board)
 
     game_loop: do while (game_over .neqv. .TRUE.)
-        call print_board(game_board)
+        if (turn_player) then
+            call print_board(game_board)
 
-        move = get_move()
+            move = get_move()
 
-        if (move .eq. 0) then
-            exit game_loop
+            if (move .eq. 0) then
+                exit game_loop
+            end if
+
+            move = move-1
+
+            x = mod(move, 3) + 1
+            y = (move / 3) + 1
+
+            game_board(y, x) = "X"
+        else
+            do while (.not. can_move)
+                call random_number(random_move)
+
+                move = int(random_move * 9) + 1
+                x = mod(move, 3) + 1
+                y = (move / 3) + 1
+
+                can_move = (game_board(y, x) .ne. "X") .and. (game_board(y, x) .ne. "O")
+            end do
+
+            game_board(x,y) = "O"
         end if
 
-        move = move-1
-
-        x = mod(move, 3) + 1
-        y = (move / 3) + 1
-
-        game_board(y, x) = "X"
-
+        turn_player = .not. turn_player
         game_over = check_game_over(game_board)
     end do game_loop
 
-    write(*,*) "Win!"
+    
+    if (turn_player) then
+        write(*,*) "X Wins!"
+    else
+        write(*,*) "O Wins!"
+    end if
+
     call print_board(game_board)
 
-
 contains 
-
+    ! //TODO: warn player when spot is not empty or invalid
     function get_move()
         integer :: get_move
 
